@@ -168,10 +168,13 @@ funcerino <- function(roads,car,packages) {
   if (car$load>0) {
     print(paste("Current load:",car$load))
     print(paste("Destination: X",packages[car$load,3],"Y",packages[car$load,4]))
+    pack = findPackage(car)
+    car$nextMove = aStar(roads, car, packages[car$load,3], packages[car$load,4])
+  }
+  else{
+    pack = findPackage(car, packages)
+    car$nextMove = aStar(roads, car, pack[[1]], pack[[2]])
   }
   
-  pack = findPackage(car, packages)
-  car$nextMove = aStar(roads, car, pack[[1]], pack[[2]])
-
   return (car)
 }
