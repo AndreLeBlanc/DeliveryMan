@@ -19,13 +19,11 @@ findPackage = function(car, packages) {
     curr = curr + 1
   }
   
-  return (c(packages[pack, 1], packages[pack, 2]))
+  return (list(packages[pack, 1], packages[pack, 2]))
 }
 
-#findPath = function()
-
 findNodes = function(x, y) {
-  dir = c(right = T, left = T, up = T, down = T)
+  dir = list(right = T, left = T, up = T, down = T)
   if (x == 1) { dir$left = F }
   if (x == 10) { dir$right = F }
   if (y == 1) { dir$down = F }
@@ -35,81 +33,134 @@ findNodes = function(x, y) {
 
 nodeVal = function(roads, srcX, srxY, destX, destY) {
   cost = 0
-  heuristic = manhattanD(, , , )
-  
-  return c(cost, heuristic)
+  heuristic = manhattanD(srcX, srxY, destX, destY)
+  return (list(g = cost, h = heuristic))
 }
 
 updateMatrix = function(roads, mat, frontier, src, curr, dest, path) {
-  node = nodeVal(roads, curr[1], curr[2], dest[1], dest[2])
-  entry = (mat[curr[1], curr[2]])
-  entry$h = node$heuristic
-  #entry$g = node$cost
-  entry$g = path + 1
-  entry$arrow = c(src[1], src[2])
+  if (!is.null(mat[[curr[[1]], curr[[2]]]])) {
+    return (list(mat, frontier))
+  }
   
-  insertFrontier(frontier, entry$g + entry$h, srcX, srcY)
+  node = nodeVal(roads, curr[[1]], curr[[2]], dest[[1]], dest[[2]])
+  entry = list(g = path+1, h = node$h, closed = F, arrow = list(src[[1]], src[[2]]))
+  
+  # currNode = mat[curr[[1]], curr[[2]]]
+  # if (currNode != NULL) {
+    # if (currNode$g > entry$g) {
+    #   mat[curr[[1]], curr[[2]]] = list(entry)
+    # }
+  # }
+  mat[curr[[1]], curr[[2]]] = list(entry)
+  
+  if (is.null(mat[[src[[1]], src[[2]]]])) {
+    srcEntry = list(g = path, h = node$h, closed = T, arrow = list(0, 0))
+    mat[src[[1]], src[[2]]] = list(srcEntry)
+  }
+  
+  frontier = insertFrontier(frontier, entry$g + entry$h, curr[[1]], curr[[2]])
+  return (list(mat, frontier))
 }
 
 insertFrontier = function(frontier, f, x, y) {
   i = 1
   insert = F
-  for(e in frontier) {
-    if (f < e$f) {
-      append(c(f, x, y), frontier, i)
+  len = length(frontier)
+  
+  while (i <= len) {
+    e = frontier[[i]]
+    if (f < e[[1]]) {
+      frontier = append(frontier, list(list(f, x, y)), after = (i - 1))
       insert = T
+      break
     }
+    
     i = i + 1
   }
-  
+
   if (!insert) {
-    append(c(f, x, y), frontier)
+    frontier = append(frontier, list(list(f, x, y)))
+    i = i - 1 # debug
   }
+  
+  return (frontier)
 }
 
 traverseArrow = function(mat, dest) {
-  prev = curr = mat[dest[1], dest[2]]
-  while (T) {
-    arr = curr$arrow
-    if (arr$x == 0) {
-      return (prev)
-    }
-    prev = curr
-    curr = mat[arr$x, arr$y]
+  prev = mat[[dest[[1]], dest[[2]]]]
+  curr = prev
+  arr = curr$arrow
+  if (arr[[1]] == 0) {
+    return (prev$arrow)
   }
-  return (c())
+
+  depth = 1  
+  while (T) {
+    temp = mat[[arr[[1]], arr[[2]]]]
+    arr = temp$arrow
+    if (arr[[1]] == 0) {
+      if (depth == 1) {
+        return (dest)
+      }
+      return (prev$arrow)
+    }
+    
+    prev = curr
+    curr = temp
+    depth = depth + 1
+  }
+  
+  return (NULL)
 }
 
 aStar = function(roads, car, x, y) {
-  entry <- c(g <- 0, h <- 0, closed <- F, arrow <- c(0, 0))
-  mat = matrix(c(rep(entry, 100)), nrow <- 10, ncol <- 10)
-  frontier <- c() #c(f, x, y)
+  # Create road map and frontier nodes
+  mat <- matrix((rep(list(), 100)), nrow = 10, ncol = 10)
+  frontier <- list()
   
   path <- 0
   currX = car$x
   currY = car$y
-  
-  while (currX != x & currY != y) {
+
+  while (currX != x | currY != y) {
     dir = findNodes(currX, currY)
     
-    if (dir$right) {updateMatrix(roads, mat, frontier, c(currX, currY), c(currX+1, currY), c(x, y), path) }
-    if (dir$left) {updateMatrix(roads, mat, frontier, c(currX, currY), c(currX-1, currY), c(x, y), path) }
-    if (dir$up) {updateMatrix(roads, mat, frontier, c(currX, currY), c(currX, currY+1), c(x, y), path) }
-    if (dir$down) {updateMatrix(roads, mat, frontier, c(currX, currY), c(currX, currY-1), c(x, y), path) }
+    # Updates matrix and frontier for every accesible node
+    if (dir$right) {
+      nodes = updateMatrix(roads, mat, frontier, c(currX, currY), c(currX+1, currY), c(x, y), path)
+      mat = nodes[[1]]
+      frontier = nodes[[2]]
+    }
+    if (dir$left) {
+      nodes = updateMatrix(roads, mat, frontier, c(currX, currY), c(currX-1, currY), c(x, y), path)
+      mat = nodes[[1]]
+      frontier = nodes[[2]]
+    }
+    if (dir$up) {
+      nodes = updateMatrix(roads, mat, frontier, c(currX, currY), c(currX, currY+1), c(x, y), path)
+      mat = nodes[[1]]
+      frontier = nodes[[2]]
+    }
+    if (dir$down) {
+      nodes = updateMatrix(roads, mat, frontier, c(currX, currY), c(currX, currY-1), c(x, y), path)
+      mat = nodes[[1]]
+      frontier = nodes[[2]]
+    }
     
-    new = frontier[1]
-    currX = new$x
-    currY = new$y
-    frontier[-1]
-    
-    path <- path + 1
+    # Get and remove fittest node in the frontier and update current nodes
+    new = frontier[[1]]
+    currX = new[[2]]
+    currY = new[[3]]
+    frontier = frontier[-1]
+    path = path + 1
   }
-  
-  nextNode = traverseArrow(mat, c(x, y))
-  if (nextNode[1] > car$x) { return 6 }
-  if (nextNode[1] < car$x) { return 4 }
-  if (nextNode[2] > car$y) { return 8 }
-  if (nextNode[2] < car$y) { return 2 }
+
+  # Traverse the road map from the destination to the source, extracting the first move
+  nextNode = traverseArrow(mat, list(x, y))
+  if (nextNode[[1]] > car$x) { return (6) }
+  if (nextNode[[1]] < car$x) { return (4) }
+  if (nextNode[[2]] > car$y) { return (8) }
+  if (nextNode[[2]] < car$y) { return (2) }
 }
 
 #' @export
@@ -120,12 +171,7 @@ funcerino <- function(roads,car,packages) {
   }
   
   pack = findPackage(car, packages)
-  car$nextMove = aStar(roads, car, pack[1], pack[2])
-  
-  #print(paste("Closest: ", findPackage(car, packages)))
-  #print(packages)
-  
-  #car$nextMove=readline("Enter next move. Valid moves are 2,4,6,8,0 (directions as on keypad) or q for quit.")
-  #if (car$nextMove=="q") {stop("Game terminated on user request.")}
+  car$nextMove = aStar(roads, car, pack[[1]], pack[[2]])
+
   return (car)
 }
