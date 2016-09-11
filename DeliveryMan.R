@@ -90,7 +90,7 @@ runDeliveryMan <- function (carReady=manualDM,dim=10,turns=2000,
           return (i)
         }
       }      
-      car=carReady(roads,car,packages)
+      car=carReady(roads,car,packages, dim)
       car=processNextMove(car,roads,dim)
     } else {
       car$wait=car$wait-1

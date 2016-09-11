@@ -22,18 +22,29 @@ findPackage = function(car, packages) {
   return (list(packages[pack, 1], packages[pack, 2]))
 }
 
-findNodes = function(x, y) {
+findNodes = function(x, y, dim) {
   dir = list(right = T, left = T, up = T, down = T)
   if (x == 1) { dir$left = F }
-  if (x == 10) { dir$right = F }
+  if (x == dim) { dir$right = F }
   if (y == 1) { dir$down = F }
-  if (y == 10) { dir$up = F }
+  if (y == dim) { dir$up = F }
   return (dir)
 }
 
-nodeVal = function(roads, srcX, srxY, destX, destY) {
-  cost = 0
-  heuristic = manhattanD(srcX, srxY, destX, destY)
+nodeVal = function(roads, src, srcX, srcY, destX, destY) {
+  if (src[[1]] < srcX) {
+    cost = roads$hroads[srcY, src[[1]]]
+  }
+  else if (srcX < src[[1]]) {
+    cost = roads$hroads[srcY, srcX]
+  }
+  else if (srcY < src[[2]]) {
+    cost = roads$vroads[srcY, srcX]
+  }
+  else {
+    cost = roads$vroads[src[[2]],srcX] 
+  }
+  heuristic = manhattanD(srcX, srcY, destX, destY)
   return (list(g = cost, h = heuristic))
 }
 
@@ -42,8 +53,8 @@ updateMatrix = function(roads, mat, frontier, src, curr, dest, path) {
     return (list(mat, frontier))
   }
   
-  node = nodeVal(roads, curr[[1]], curr[[2]], dest[[1]], dest[[2]])
-  entry = list(g = path+1, h = node$h, closed = F, arrow = list(src[[1]], src[[2]]))
+  node = nodeVal(roads, src, curr[[1]], curr[[2]], dest[[1]], dest[[2]])
+  entry = list(g = path+node$g, h = node$h, closed = F, arrow = list(src[[1]], src[[2]]))
   
   # currNode = mat[curr[[1]], curr[[2]]]
   # if (currNode != NULL) {
@@ -113,9 +124,10 @@ traverseArrow = function(mat, dest) {
   return (NULL)
 }
 
-aStar = function(roads, car, x, y) {
+aStar = function(roads, car, x, y, dim) {
   # Create road map and frontier nodes
-  mat <- matrix((rep(list(), 100)), nrow = 10, ncol = 10)
+  len = length(roads$hroads)
+  mat <- matrix((rep(list(), dim*dim)), nrow = dim, ncol = dim)
   frontier <- list()
   
   path <- 0
@@ -123,7 +135,7 @@ aStar = function(roads, car, x, y) {
   currY = car$y
 
   while (currX != x | currY != y) {
-    dir = findNodes(currX, currY)
+    dir = findNodes(currX, currY, dim)
     
     # Updates matrix and frontier for every accesible node
     if (dir$right) {
@@ -157,23 +169,29 @@ aStar = function(roads, car, x, y) {
 
   # Traverse the road map from the destination to the source, extracting the first move
   nextNode = traverseArrow(mat, list(x, y))
+  #if (nextNode[[1]] > car$x && nextNode[[1]] > x) { return (5) }
   if (nextNode[[1]] > car$x) { return (6) }
+  #if (nextNode[[1]] < car$x && nextNode[[1]] < x) { return (5) }
   if (nextNode[[1]] < car$x) { return (4) }
+  #if (nextNode[[2]] > car$y && nextNode[[2]] > y) { return (5) }
   if (nextNode[[2]] > car$y) { return (8) }
+  #if (nextNode[[2]] < car$y && nextNode[[2]] < y) { return (5) }
   if (nextNode[[2]] < car$y) { return (2) }
 }
 
 #' @export
-funcerino <- function(roads,car,packages) {
+funcerino <- function(roads,car,packages, dim) {
+  # If the car already has a package it goes and delivers it.
   if (car$load>0) {
     print(paste("Current load:",car$load))
     print(paste("Destination: X",packages[car$load,3],"Y",packages[car$load,4]))
-    pack = findPackage(car)
-    car$nextMove = aStar(roads, car, packages[car$load,3], packages[car$load,4])
+    car$nextMove = aStar(roads, car, packages[car$load,3], packages[car$load,4], dim)
   }
+  
+  # If the car doesn't have a package it goes and finds the nearest one. 
   else{
     pack = findPackage(car, packages)
-    car$nextMove = aStar(roads, car, pack[[1]], pack[[2]])
+    car$nextMove = aStar(roads, car, pack[[1]], pack[[2]], dim)
   }
   
   return (car)
