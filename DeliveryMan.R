@@ -62,7 +62,7 @@ manualDM=function(roads,car,packages, dim) {
 #' @return A string describing the outcome of the game.
 #' @export
 runDeliveryMan <- function (carReady=manualDM,dim=10,turns=2000,
-                            doPlot=T,pause=0.1,del=5) {
+                            doPlot=T,pause=0.1,del=5, man, manH) {
   roads=makeRoadMatrices(dim)
   car=list(x=1,y=1,wait=0,load=0,nextMove=NA,mem=list())
   packages=matrix(sample(1:dim,replace=T,5*del),ncol=5)
@@ -90,7 +90,7 @@ runDeliveryMan <- function (carReady=manualDM,dim=10,turns=2000,
           return (i)
         }
       }      
-      car=carReady(roads,car,packages, dim)
+      car=carReady(roads,car,packages, dim, man, manH)
       car=processNextMove(car,roads,dim)
     } else {
       car$wait=car$wait-1
