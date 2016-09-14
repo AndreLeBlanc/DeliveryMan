@@ -22,7 +22,7 @@ basicDM=function(roads,car,packages) {
   car$mem=list()
   return (car)
 }
-manualDM=function(roads,car,packages) {
+manualDM=function(roads,car,packages, dim) {
   if (car$load>0) {
     print(paste("Current load:",car$load))
     print(paste("Destination: X",packages[car$load,3],"Y",packages[car$load,4]))
