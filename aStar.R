@@ -119,6 +119,7 @@ traverseArrow = function(mat, dest) {
   prev = mat[[dest[[1]], dest[[2]]]]
   curr = prev
   arr = curr$arrow
+  
   if (arr[[1]] == 0) {
     return (prev$arrow)
   }
@@ -163,6 +164,8 @@ aStar = function(roads, car, x, y, dim, man) {
   path <- 0
   currX = car$x
   currY = car$y
+  
+  if (currX == x & currY == y) { return (5) }
 
   while (currX != x | currY != y) {
     dir = findNodes(currX, currY, dim)
@@ -204,8 +207,8 @@ aStar = function(roads, car, x, y, dim, man) {
 
 # Goes towards a destination with a package that is already picked up.
 goToDest = function(car, roads, packages, dim, manH) {
-  print(paste("Current load:",car$load))
-  print(paste("Destination: X",packages[car$load,3],"Y",packages[car$load,4]))
+  # print(paste("Current load:",car$load))
+  # print(paste("Destination: X",packages[car$load,3],"Y",packages[car$load,4]))
   if (manH) {
     car$nextMove = aStar(roads, car, packages[car$load,3], packages[car$load,4], dim, T)
   }
@@ -238,11 +241,23 @@ funcerino <- function(roads,car,packages, dim, man, manH) {
   if (car$load>0) {
     car = goToDest(car, roads, packages, dim, manH)
   }
-  
   # If the car doesn't have a package it goes and finds the nearest one. 
   else{
     car = goToPack(car, roads, packages, dim, man, manH)
   }
   
   return (car)
+}
+
+#' @export
+runNtimes <- function(n) {
+  print("STARTING")
+  i = 1
+  while (n > 0) {
+    runDeliveryMan(funcerino, 10, 2000, T, 0, 5, T, T)
+    print(paste("RUN COMPLETE: ", i))
+    n = n - 1
+    i = i + 1
+  }
+  print("DONE!!!")
 }
