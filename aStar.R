@@ -73,13 +73,6 @@ updateMatrix = function(roads, mat, frontier, src, curr, dest, path, man) {
   
   node = nodeVal(roads, src, curr[[1]], curr[[2]], dest[[1]], dest[[2]], man)
   entry = list(g = path+node$g, h = node$h, closed = F, arrow = list(src[[1]], src[[2]]))
-  
-  # currNode = mat[curr[[1]], curr[[2]]]
-  # if (currNode != NULL) {
-    # if (currNode$g > entry$g) {
-    #   mat[curr[[1]], curr[[2]]] = list(entry)
-    # }
-  # }
   mat[curr[[1]], curr[[2]]] = list(entry)
   
   if (is.null(mat[[src[[1]], src[[2]]]])) {
@@ -103,13 +96,11 @@ insertFrontier = function(frontier, f, x, y) {
       insert = T
       break
     }
-    
     i = i + 1
   }
 
   if (!insert) {
     frontier = append(frontier, list(list(f, x, y)))
-    i = i - 1 # debug
   }
   
   return (frontier)
@@ -165,8 +156,10 @@ aStar = function(roads, car, x, y, dim, man) {
   currX = car$x
   currY = car$y
   
+  # If we are at the destination already, then stay
   if (currX == x & currY == y) { return (5) }
-
+  
+  # Otherwise execute the A star algorithm.
   while (currX != x | currY != y) {
     dir = findNodes(currX, currY, dim)
     
@@ -207,31 +200,14 @@ aStar = function(roads, car, x, y, dim, man) {
 
 # Goes towards a destination with a package that is already picked up.
 goToDest = function(car, roads, packages, dim, manH) {
-  # print(paste("Current load:",car$load))
-  # print(paste("Destination: X",packages[car$load,3],"Y",packages[car$load,4]))
-  if (manH) {
-    car$nextMove = aStar(roads, car, packages[car$load,3], packages[car$load,4], dim, T)
-  }
-  else {
-    car$nextMove = aStar(roads, car, packages[car$load,3], packages[car$load,4], dim, F)
-  }
+  car$nextMove = aStar(roads, car, packages[car$load,3], packages[car$load,4], dim, manH)
   return (car) 
 }
 
 # finds a package and moves towards it
 goToPack = function(car, roads, packages, dim, man, manH) {
-  if (man) {
-    pack = findPackage(car, packages, T)
-  }
-  else {
-    pack = findPackage(car, packages, F)
-  }
-  if (manH) {
-    car$nextMove = aStar(roads, car, pack[[1]], pack[[2]], dim, T)
-  }
-  else {
-    car$nextMove = aStar(roads, car, pack[[1]], pack[[2]], dim, F)
-  }
+  pack = findPackage(car, packages, man)
+  car$nextMove = aStar(roads, car, pack[[1]], pack[[2]], dim, manH)
   return (car)
 }
 
