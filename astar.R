@@ -241,7 +241,7 @@ runNtimes <- function(n) {
   
   print("STARTING")
   while (n > 0) {
-    steps = runDeliveryMan(moveCar, 10, 2000, T, 0.1, 5, T, T)
+    steps = runDeliveryMan(moveCar, 10, 2000, T, 0, 5, T, T)
     print(paste("RUN COMPLETE: ", i))
     
     n = n - 1
@@ -253,5 +253,5 @@ runNtimes <- function(n) {
   print(paste("Average no. steps = ", sum / init))
   #print(runs)
   #writeLines(unlist(lapply(runs, paste, collapse=" ")))
-  #lapply(runs, write, "ee.txt", append=TRUE, ncolumns=1000)
+  #lapply(runs, write, "nmm.txt", append=TRUE, ncolumns=1000)
 }
