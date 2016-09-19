@@ -143,7 +143,11 @@ traverseArrow = function(mat, dest) {
 
 makeChoice = function(car, mat, x, y) {
   nextNode = traverseArrow(mat, list(x, y))
-  # Have a probability p and stand still (5) if it is a high g cost.
+  
+  #node = mat[[nextNode[[1]], nextNode[[2]]]]
+  #rand = runif(1)
+  #if (node$g > 3 & rand[[1]] > 0.3) { return (5) }
+  
   #if (nextNode[[1]] > car$x && nextNode[[1]] > x) { return (5) }
   if (nextNode[[1]] > car$x) { return (6) }
   #if (nextNode[[1]] < car$x && nextNode[[1]] < x) { return (5) }
@@ -266,9 +270,27 @@ plotHist <- function(fname) {
 }
 
 #' @export
-plotBox <- function(fname) {
-  data <- read.csv(file=fname, sep=",", head=TRUE)
-  boxplot(data$vals, main='Distribution of runs', ylab='Number of turns')
+plotBox <- function(fname1, fname2=NULL, xlab=NULL) {
+  data1 <- read.csv(file=fname1, sep=",", head=TRUE)
+  if (is.null(fname2)) {
+    boxplot(data1$vals, main='Distribution of runs', ylab='Number of turns')
+    if (!is.null(names)) {
+      boxplot(data1$vals, names=xlab, main='Distribution of runs', ylab='Number of turns')
+    }
+    else {
+      boxplot(data1$vals, main='Distribution of runs', ylab='Number of turns')
+    }
+  }
+  else {
+    if (!is.null(names)) {
+      data2 <- read.csv(file=fname2, sep=",", head=TRUE)
+      boxplot(data1$vals, data2$vals, names=xlab, main='Distribution of runs', ylab='Number of turns')
+    }
+    else {
+      data2 <- read.csv(file=fname2, sep=",", head=TRUE)
+      boxplot(data1$vals, data2$vals, main='Distribution of runs', ylab='Number of turns')
+    }
+  }
 }
 
 #' @export

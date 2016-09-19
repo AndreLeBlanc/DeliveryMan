@@ -1,0 +1,4 @@
+mmp: expected value = 170.53, sigma = 40.865, 95% confidence interval
+     = 170.53 +- (1.96)*(40.865/(sqrt(100))) = [162.52046, 178.53954]
+mmd: expected value = 182.11, sigma = 37.33872
+pp:  expected value = 204.67, sigma = 51.83931
