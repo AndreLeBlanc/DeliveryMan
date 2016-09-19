@@ -233,7 +233,7 @@ moveCar <- function(roads,car,packages, dim, man, manH) {
 }
 
 #' @export
-runNtimes <- function(n) {
+runNtimes <- function(n, man=T, manH=T, fname="test.dat") {
   init = n
   i = 1
   sum = 0
@@ -241,7 +241,7 @@ runNtimes <- function(n) {
   
   print("STARTING")
   while (n > 0) {
-    steps = runDeliveryMan(moveCar, 10, 2000, T, 0, 5, T, T)
+    steps = runDeliveryMan(moveCar, 10, 2000, T, 0, 5, man, manH)
     print(paste("RUN COMPLETE: ", i))
     
     n = n - 1
@@ -253,5 +253,17 @@ runNtimes <- function(n) {
   print(paste("Average no. steps = ", sum / init))
   #print(runs)
   #writeLines(unlist(lapply(runs, paste, collapse=" ")))
-  #lapply(runs, write, "nmm.txt", append=TRUE, ncolumns=1000)
+  lapply(runs, write, fname, append=TRUE, ncolumns=1000)
+}
+
+#' @export
+plotHist <- function(fname) {
+  data <- read.csv(file=fname, sep=",", head=TRUE)
+  hist(data$vals)
+  hist(data$vals, main="Distribution of runs", xlab="Number of turns")
+}
+
+plotBox <- function(fname) {
+  data <- read.csv(file=fname, sep=",", head=TRUE)
+  boxplot(data$vals, main='Distribution of runs', ylab='Number of turns')
 }

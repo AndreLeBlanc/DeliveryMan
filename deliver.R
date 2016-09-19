@@ -1,5 +1,5 @@
 source("DeliveryMan.R")
-source("aStar.R")
+source("astar.R")
 
 # manhattan distance is used to find nearest package 
 # and as the heurist in A*
