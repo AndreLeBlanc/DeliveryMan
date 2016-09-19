@@ -143,6 +143,7 @@ traverseArrow = function(mat, dest) {
 
 makeChoice = function(car, mat, x, y) {
   nextNode = traverseArrow(mat, list(x, y))
+  # Have a probability p and stand still (5) if it is a high g cost.
   #if (nextNode[[1]] > car$x && nextNode[[1]] > x) { return (5) }
   if (nextNode[[1]] > car$x) { return (6) }
   #if (nextNode[[1]] < car$x && nextNode[[1]] < x) { return (5) }
@@ -253,6 +254,7 @@ runNtimes <- function(n, man=T, manH=T, fname="test.dat") {
   print(paste("Average no. steps = ", sum / init))
   #print(runs)
   #writeLines(unlist(lapply(runs, paste, collapse=" ")))
+  lapply("vals", write, fname, append=TRUE, ncolumns=1000)
   lapply(runs, write, fname, append=TRUE, ncolumns=1000)
 }
 
@@ -263,7 +265,19 @@ plotHist <- function(fname) {
   hist(data$vals, main="Distribution of runs", xlab="Number of turns")
 }
 
+#' @export
 plotBox <- function(fname) {
   data <- read.csv(file=fname, sep=",", head=TRUE)
   boxplot(data$vals, main='Distribution of runs', ylab='Number of turns')
+}
+
+#' @export
+stdDeviation <- function(fname) {
+  data <- read.csv(file=fname, sep=",", head=TRUE)
+  print(sd(data$vals))
+}
+
+average <- function(fname) {
+  data <- read.csv(file=fname, sep=",", head=TRUE)
+  print(mean(data$vals))
 }
