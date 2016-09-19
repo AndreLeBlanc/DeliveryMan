@@ -71,8 +71,15 @@ updateMatrix = function(roads, mat, frontier, src, curr, dest, path, man) {
     return (list(mat, frontier))
   }
   
+  parentG = 0
+  srcNode = mat[[src[[1]], src[[2]]]]
+  if(!is.null(srcNode)) {
+    parentG = srcNode$g
+  }
+  
   node = nodeVal(roads, src, curr[[1]], curr[[2]], dest[[1]], dest[[2]], man)
-  entry = list(g = path+node$g, h = node$h, closed = F, arrow = list(src[[1]], src[[2]]))
+  #entry = list(g = path+node$g, h = node$h, closed = F, arrow = list(src[[1]], src[[2]]))
+  entry = list(g = parentG+node$g, h = node$h, closed = F, arrow = list(src[[1]], src[[2]]))
   mat[curr[[1]], curr[[2]]] = list(entry)
   
   if (is.null(mat[[src[[1]], src[[2]]]])) {
@@ -146,7 +153,7 @@ makeChoice = function(car, mat, x, y) {
   if (nextNode[[2]] < car$y) { return (2) }
 }
 
-aStar = function(roads, car, x, y, dim, man) {
+astar = function(roads, car, x, y, dim, man) {
   # Create road map and frontier nodes
   len = length(roads$hroads)
   mat <- matrix((rep(list(), dim*dim)), nrow = dim, ncol = dim)
@@ -200,19 +207,19 @@ aStar = function(roads, car, x, y, dim, man) {
 
 # Goes towards a destination with a package that is already picked up.
 goToDest = function(car, roads, packages, dim, manH) {
-  car$nextMove = aStar(roads, car, packages[car$load,3], packages[car$load,4], dim, manH)
+  car$nextMove = astar(roads, car, packages[car$load,3], packages[car$load,4], dim, manH)
   return (car) 
 }
 
 # finds a package and moves towards it
 goToPack = function(car, roads, packages, dim, man, manH) {
   pack = findPackage(car, packages, man)
-  car$nextMove = aStar(roads, car, pack[[1]], pack[[2]], dim, manH)
+  car$nextMove = astar(roads, car, pack[[1]], pack[[2]], dim, manH)
   return (car)
 }
 
 #' @export
-funcerino <- function(roads,car,packages, dim, man, manH) {
+moveCar <- function(roads,car,packages, dim, man, manH) {
   # If the car already has a package it goes and delivers it.
   if (car$load>0) {
     car = goToDest(car, roads, packages, dim, manH)
@@ -227,13 +234,24 @@ funcerino <- function(roads,car,packages, dim, man, manH) {
 
 #' @export
 runNtimes <- function(n) {
-  print("STARTING")
+  init = n
   i = 1
+  sum = 0
+  runs = list()
+  
+  print("STARTING")
   while (n > 0) {
-    runDeliveryMan(funcerino, 10, 2000, T, 0, 5, T, T)
+    steps = runDeliveryMan(moveCar, 10, 2000, T, 0.1, 5, T, T)
     print(paste("RUN COMPLETE: ", i))
+    
     n = n - 1
     i = i + 1
+    runs = append(runs, steps)
+    sum = sum + steps
   }
-  print("DONE!!!")
+  print("DONE!")
+  print(paste("Average no. steps = ", sum / init))
+  #print(runs)
+  #writeLines(unlist(lapply(runs, paste, collapse=" ")))
+  #lapply(runs, write, "ee.txt", append=TRUE, ncolumns=1000)
 }
