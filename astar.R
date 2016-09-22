@@ -1,9 +1,9 @@
-#' @export
+# Calculates the Manhattan distance between two points.
 manhattanD = function(srcX, srcY, destX, destY) {
   return (abs(srcX - destX) + abs(srcY - destY))
 }
 
-#' @export
+# Calculates the Euclidean distance between two points.
 euclideanD = function(srcX, srcY, destX, destY) {
   a = abs(srcX - destX) ^ 2
   b = abs(srcY - destY) ^ 2
@@ -11,19 +11,14 @@ euclideanD = function(srcX, srcY, destX, destY) {
   return (c)
 }
 
-#' @export
-findPackage = function(car, packages, man) {
+# Find the closest package (smallest Manhattan distance).
+findPackage = function(car, packages) {
   min = 20
   pack = 1
   curr = 1
   for(row in 1:nrow(packages)) {
     if (packages[curr, 5] == 0) {
-      if (man) {
-        dist = manhattanD(car$x, car$y, packages[curr, 1], packages[curr, 2])
-      }
-      else {
-        dist = euclideanD(car$x, car$y, packages[curr, 1], packages[curr, 2])
-      }
+      dist = manhattanD(car$x, car$y, packages[curr, 1], packages[curr, 2])
       if (dist < min) {
         pack = curr
         min = dist
@@ -35,6 +30,7 @@ findPackage = function(car, packages, man) {
   return (list(packages[pack, 1], packages[pack, 2]))
 }
 
+# Determine how many edges a node has in a dim x dim grid.
 findNodes = function(x, y, dim) {
   dir = list(right = T, left = T, up = T, down = T)
   if (x == 1) { dir$left = F }
@@ -44,7 +40,8 @@ findNodes = function(x, y, dim) {
   return (dir)
 }
 
-nodeVal = function(roads, src, srcX, srcY, destX, destY, man) {
+# Calculate the f(n) value for A* of a node.
+nodeVal = function(roads, src, srcX, srcY, destX, destY) {
   if (src[[1]] < srcX) {
     cost = roads$hroads[srcY, src[[1]]]
   }
@@ -57,16 +54,13 @@ nodeVal = function(roads, src, srcX, srcY, destX, destY, man) {
   else {
     cost = roads$vroads[src[[2]],srcX] 
   }
-  if (man) {
-    heuristic = manhattanD(srcX, srcY, destX, destY)
-  }
-  else {
-    heuristic = euclideanD(srcX, srcY, destX, destY)
-  }
+  heuristic = manhattanD(srcX, srcY, destX, destY)
+
   return (list(g = cost, h = heuristic))
 }
 
-updateMatrix = function(roads, mat, frontier, src, curr, dest, path, man) {
+# Update the frontier, visited set and matrix for graph search in A* with the f(n) value of a node.
+updateMatrix = function(roads, mat, frontier, src, curr, dest, path) {
   if (!is.null(mat[[curr[[1]], curr[[2]]]])) {
     return (list(mat, frontier))
   }
@@ -77,7 +71,7 @@ updateMatrix = function(roads, mat, frontier, src, curr, dest, path, man) {
     parentG = srcNode$g
   }
   
-  node = nodeVal(roads, src, curr[[1]], curr[[2]], dest[[1]], dest[[2]], man)
+  node = nodeVal(roads, src, curr[[1]], curr[[2]], dest[[1]], dest[[2]])
   #entry = list(g = path+node$g, h = node$h, closed = F, arrow = list(src[[1]], src[[2]]))
   entry = list(g = parentG+node$g, h = node$h, closed = F, arrow = list(src[[1]], src[[2]]))
   mat[curr[[1]], curr[[2]]] = list(entry)
@@ -91,6 +85,7 @@ updateMatrix = function(roads, mat, frontier, src, curr, dest, path, man) {
   return (list(mat, frontier))
 }
 
+# Insert a f(n) value of a node into the sorted frontier list.
 insertFrontier = function(frontier, f, x, y) {
   i = 1
   insert = F
@@ -113,6 +108,7 @@ insertFrontier = function(frontier, f, x, y) {
   return (frontier)
 }
 
+# Traverse the graph from the destination to the start to determine the path the A* algorithm found.
 traverseArrow = function(mat, dest) {
   prev = mat[[dest[[1]], dest[[2]]]]
   curr = prev
@@ -141,6 +137,7 @@ traverseArrow = function(mat, dest) {
   return (NULL)
 }
 
+# Chose the direction for the car to move through A*.
 makeChoice = function(car, mat, x, y) {
   nextNode = traverseArrow(mat, list(x, y))
   
@@ -148,18 +145,15 @@ makeChoice = function(car, mat, x, y) {
   #rand = runif(1)
   #if (node$g > 3 & rand[[1]] > 0.3) { return (5) }
   
-  #if (nextNode[[1]] > car$x && nextNode[[1]] > x) { return (5) }
   if (nextNode[[1]] > car$x) { return (6) }
-  #if (nextNode[[1]] < car$x && nextNode[[1]] < x) { return (5) }
   if (nextNode[[1]] < car$x) { return (4) }
-  #if (nextNode[[2]] > car$y && nextNode[[2]] > y) { return (5) }
   if (nextNode[[2]] > car$y) { return (8) }
-  #if (nextNode[[2]] < car$y && nextNode[[2]] < y) { return (5) }
   if (nextNode[[2]] < car$y) { return (2) }
 }
 
-astar = function(roads, car, x, y, dim, man) {
-  # Create road map and frontier nodes
+# Perform the A* algorithm.
+astar = function(roads, car, x, y, dim) {
+  # Create road map and frontier nodes.
   len = length(roads$hroads)
   mat <- matrix((rep(list(), dim*dim)), nrow = dim, ncol = dim)
   frontier <- list()
@@ -168,36 +162,36 @@ astar = function(roads, car, x, y, dim, man) {
   currX = car$x
   currY = car$y
   
-  # If we are at the destination already, then stay
+  # If we are at the destination already, then stay.
   if (currX == x & currY == y) { return (5) }
   
   # Otherwise execute the A star algorithm.
   while (currX != x | currY != y) {
     dir = findNodes(currX, currY, dim)
     
-    # Updates matrix and frontier for every accesible node
+    # Updates matrix and frontier for every accesible node.
     if (dir$right) {
-      nodes = updateMatrix(roads, mat, frontier, c(currX, currY), c(currX+1, currY), c(x, y), path, man)
+      nodes = updateMatrix(roads, mat, frontier, c(currX, currY), c(currX+1, currY), c(x, y), path)
       mat = nodes[[1]]
       frontier = nodes[[2]]
     }
     if (dir$left) {
-      nodes = updateMatrix(roads, mat, frontier, c(currX, currY), c(currX-1, currY), c(x, y), path, man)
+      nodes = updateMatrix(roads, mat, frontier, c(currX, currY), c(currX-1, currY), c(x, y), path)
       mat = nodes[[1]]
       frontier = nodes[[2]]
     }
     if (dir$up) {
-      nodes = updateMatrix(roads, mat, frontier, c(currX, currY), c(currX, currY+1), c(x, y), path, man)
+      nodes = updateMatrix(roads, mat, frontier, c(currX, currY), c(currX, currY+1), c(x, y), path)
       mat = nodes[[1]]
       frontier = nodes[[2]]
     }
     if (dir$down) {
-      nodes = updateMatrix(roads, mat, frontier, c(currX, currY), c(currX, currY-1), c(x, y), path, man)
+      nodes = updateMatrix(roads, mat, frontier, c(currX, currY), c(currX, currY-1), c(x, y), path)
       mat = nodes[[1]]
       frontier = nodes[[2]]
     }
     
-    # Get and remove fittest node in the frontier and update current nodes
+    # Get and remove fittest node in the frontier and update current nodes.
     new = frontier[[1]]
     currX = new[[2]]
     currY = new[[3]]
@@ -205,40 +199,40 @@ astar = function(roads, car, x, y, dim, man) {
     path = path + 1
   }
 
-  # Traverse the road map from the destination to the source, extracting the first move
+  # Traverse the road map from the destination to the source, extracting the first move.
   nextNode = makeChoice(car, mat, x, y)
   return (nextNode)
 }
 
 # Goes towards a destination with a package that is already picked up.
-goToDest = function(car, roads, packages, dim, manH) {
-  car$nextMove = astar(roads, car, packages[car$load,3], packages[car$load,4], dim, manH)
+goToDest = function(car, roads, packages, dim) {
+  car$nextMove = astar(roads, car, packages[car$load,3], packages[car$load,4], dim)
   return (car) 
 }
 
-# finds a package and moves towards it
-goToPack = function(car, roads, packages, dim, man, manH) {
-  pack = findPackage(car, packages, man)
-  car$nextMove = astar(roads, car, pack[[1]], pack[[2]], dim, manH)
+# Finds a package and moves towards it.
+goToPack = function(car, roads, packages, dim) {
+  pack = findPackage(car, packages)
+  car$nextMove = astar(roads, car, pack[[1]], pack[[2]], dim)
   return (car)
 }
 
-#' @export
-moveCar <- function(roads,car,packages, dim, man, manH) {
+# Move the delivery man's car.
+moveCar <- function(roads, car, packages, dim) {
   # If the car already has a package it goes and delivers it.
   if (car$load>0) {
-    car = goToDest(car, roads, packages, dim, manH)
+    car = goToDest(car, roads, packages, dim)
   }
   # If the car doesn't have a package it goes and finds the nearest one. 
   else{
-    car = goToPack(car, roads, packages, dim, man, manH)
+    car = goToPack(car, roads, packages, dim)
   }
   
   return (car)
 }
 
-#' @export
-runNtimes <- function(n, man=T, manH=T, fname="test.dat") {
+# Run the Delivery Man game n times.
+runNtimes <- function(n, fname="test.dat") {
   init = n
   i = 1
   sum = 0
@@ -246,7 +240,7 @@ runNtimes <- function(n, man=T, manH=T, fname="test.dat") {
   
   print("STARTING")
   while (n > 0) {
-    steps = runDeliveryMan(moveCar, 10, 2000, T, 0, 5, man, manH)
+    steps = runDeliveryMan(moveCar, 10, 2000, T, 0, 5)
     print(paste("RUN COMPLETE: ", i))
     
     n = n - 1
@@ -256,20 +250,18 @@ runNtimes <- function(n, man=T, manH=T, fname="test.dat") {
   }
   print("DONE!")
   print(paste("Average no. steps = ", sum / init))
-  #print(runs)
-  #writeLines(unlist(lapply(runs, paste, collapse=" ")))
   lapply("vals", write, fname, append=TRUE, ncolumns=1000)
   lapply(runs, write, fname, append=TRUE, ncolumns=1000)
 }
 
-#' @export
+# Plot a histogram from data written to a file in runNtimes.
 plotHist <- function(fname) {
   data <- read.csv(file=fname, sep=",", head=TRUE)
   hist(data$vals)
   hist(data$vals, main="Distribution of runs", xlab="Number of turns")
 }
 
-#' @export
+# Plot a boxgraph from data written to a file in runNtimes.
 plotBox <- function(fname1, fname2=NULL, xlab=NULL) {
   data1 <- read.csv(file=fname1, sep=",", head=TRUE)
   if (is.null(fname2)) {
@@ -293,12 +285,13 @@ plotBox <- function(fname1, fname2=NULL, xlab=NULL) {
   }
 }
 
-#' @export
+# Calculate the standard deviation from data written to a file in runNtimes.
 stdDeviation <- function(fname) {
   data <- read.csv(file=fname, sep=",", head=TRUE)
   print(sd(data$vals))
 }
 
+# Calculate the average from data written to a file in runNtimes.
 average <- function(fname) {
   data <- read.csv(file=fname, sep=",", head=TRUE)
   print(mean(data$vals))
